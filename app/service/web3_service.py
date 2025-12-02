@@ -1,5 +1,5 @@
 from web3 import Web3
-from app.core.config import settings
+from app.configuration.config import settings
 
 ganache_url = settings.GANACHE_URL
 web3_ganache = Web3(Web3.HTTPProvider(ganache_url))
