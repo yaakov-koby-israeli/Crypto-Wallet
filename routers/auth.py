@@ -2,12 +2,12 @@ from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from fastapi import HTTPException, APIRouter, status, Depends
 from sqlalchemy.orm import Session
-from database import SessionLocal
-from models import Users
+from app.database.models import Users
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
-from app.core.config import settings
+from app.configuration.config import settings
+from app.database.session_local import get_db
 from app.schemas.token import Token
 from app.schemas.create_user_request import CreateUserRequest
 from app.service.user_service import get_user_by_username
@@ -22,14 +22,7 @@ router = APIRouter(
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-db_dependency = Annotated[Session, Depends(get_db)]
+db_dependency = Annotated [Session,Depends(get_db)]
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 
