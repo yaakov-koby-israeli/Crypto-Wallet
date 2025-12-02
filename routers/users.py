@@ -61,15 +61,18 @@ async def transfer_eth(user: user_dependency, db: db_dependency, transfer_reques
     if not to_account_user:
         raise HTTPException(status_code=404, detail='Destination User Not Found')
 
-    # Use web3 service instead of direct web3 ganache
+    # Use web3 service to transfer the money
     tx_hash = send_eth(
         from_address=user.get("public_key"),
         to_address=to_account_user.public_key,
         amount=transfer_request.amount,
     )
 
-    # Update account balances in database
-    update_db_after_transfer_eth(db,from_account,to_account,transfer_request.amount)
+    # Update user who delivers the eth
+    update_db_after_transfer_eth(db,user.get("public_key"),from_account)
+
+    # Update user who gets the eth
+    update_db_after_transfer_eth(db, to_account_user.public_key , to_account)
 
     return {"message": "ETH transferred successfully", "transaction_hash": tx_hash}
 
