@@ -1,7 +1,6 @@
-from sqlalchemy.orm import Session
-from models import Account, Users
+from app.database.models import Account, Users
 from app.service.web3_service import get_account_balance
-
+from sqlalchemy.orm import Session
 
 def setup_account_for_user(db: Session, user: Users) -> Account:
 
@@ -20,8 +19,7 @@ def setup_account_for_user(db: Session, user: Users) -> Account:
     new_account = Account(
         user_id=user.id,
         balance=real_balance,
-        is_active=True,
-        active_loan=False,
+        is_active=True
     )
 
     db.add(new_account)
