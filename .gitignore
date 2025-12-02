@@ -1,6 +1,23 @@
+# PyCharm / JetBrains IDE
 .idea/
+*.iml
+*.iws
+*.ipr
+
+# Also catch any stray .idea files that might be elsewhere (rare)
+**/.idea/
+
+# CMake
+cmake-build-*/
+
+# Other common Python stuff you already have
 __pycache__/
-*.pyc
-*.db
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
 .env
-.vscode/
+.venv
+venv/
+env/
