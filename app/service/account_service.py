@@ -1,5 +1,5 @@
 from app.database.models import Account, Users
-from app.service.web3_service import get_account_balance
+from app.service.web3_service import get_account_balance_from_blockchain
 from sqlalchemy.orm import Session
 
 def setup_account_for_user(db: Session, user: Users) -> Account:
@@ -14,7 +14,7 @@ def setup_account_for_user(db: Session, user: Users) -> Account:
         raise ValueError("Account already exists")
 
     # Read blockchain balance
-    real_balance = get_account_balance(user.public_key)
+    real_balance = get_account_balance_from_blockchain(user.public_key)
 
     new_account = Account(
         user_id=user.id,
@@ -28,9 +28,7 @@ def setup_account_for_user(db: Session, user: Users) -> Account:
 
     return new_account
 
-def update_db_after_transfer_eth(db: Session, from_account: Account, to_account: Account, amount: float):
-    from_account.balance -= amount
-    to_account.balance += amount
-    db.commit()
-    db.refresh(from_account)
-    db.refresh(to_account)
+def update_db_after_transfer_eth(db: Session, user_public_key: str, user_account: Account):
+    user_account.balance=get_account_balance_from_blockchain(user_public_key)
+    db.commit(user_account)
+    return
