@@ -5,7 +5,7 @@ ganache_url = settings.GANACHE_URL
 web3_ganache = Web3(Web3.HTTPProvider(ganache_url))
 
 # Get the balance of an Ethereum account
-def get_account_balance(user_public_key) -> float:
+def get_account_balance_from_blockchain(user_public_key) -> float:
     balance_wei = web3_ganache.eth.get_balance(user_public_key)
     return web3_ganache.from_wei(balance_wei, 'ether')
 
