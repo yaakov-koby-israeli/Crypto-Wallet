@@ -15,7 +15,7 @@ class Users(Base):
     last_name = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(String, nullable=False)  # User
-    public_key = Column(String, unique=True, nullable=False)
+    public_key = Column(String, unique=True, nullable=True)
     created_at = Column(DateTime , default=datetime.utcnow)
 
 class Account(Base):
