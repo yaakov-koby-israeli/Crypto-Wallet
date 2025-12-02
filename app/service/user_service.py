@@ -1,6 +1,6 @@
 from typing import Optional
+from app.database.models import Users
 from sqlalchemy.orm import Session
-from models import Users
 
 def get_user_by_username(db: Session, username: str) -> Optional[Users]:
     """
