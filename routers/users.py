@@ -2,8 +2,8 @@ from fastapi import Depends, HTTPException, status, APIRouter
 from app.database.models import Users, Account
 from typing import Annotated
 from sqlalchemy.orm import Session
-from app.database.session_local import get_db
-from routers.auth import get_current_user
+from dependencies.database_dependency import get_db
+from dependencies.user_dependency import get_current_user
 from app.schemas.transfer_request import TransferRequest
 from app.service.account_service import setup_account_for_user, update_db_after_transfer_eth
 from app.service.web3_service import send_eth
