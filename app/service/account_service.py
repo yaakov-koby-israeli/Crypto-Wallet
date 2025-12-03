@@ -30,5 +30,6 @@ def setup_account_for_user(db: Session, user: Users) -> Account:
 
 def update_db_after_transfer_eth(db: Session, user_public_key: str, user_account: Account):
     user_account.balance=get_account_balance_from_blockchain(user_public_key)
-    db.commit(user_account)
+    db.commit()
+    db.refresh(user_account)
     return
