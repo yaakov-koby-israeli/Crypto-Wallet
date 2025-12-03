@@ -33,13 +33,17 @@ async def delete_user(user: user_dependency, db: db_dependency, user_id: int = P
 
     # Fetch user and account associated with user_id
     user_to_delete = db.query(Users).filter(Users.id == user_id).first()
-    user_account_to_delete = db.query(Account).filter(Account.user_id == user_id).first()
-
     if user_to_delete is None:
         raise HTTPException(status_code=404, detail="User Not Found!")
 
+    # Fetch account associated with user_id
+    user_account_to_delete = db.query(Account).filter(Account.user_id == user_id).first()
+    if user_account_to_delete is None:
+        raise HTTPException(status_code=404, detail="User Account Not Found!")
+
     # Delete user and associated account in a single transaction
     db.delete(user_account_to_delete)
+    db.delete(user_to_delete)
     db.commit()  # Single commit for both operations
 
     return {"message": f"User {user_id} and associated account deleted successfully"}
