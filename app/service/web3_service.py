@@ -15,7 +15,7 @@ def send_eth(from_address: str, to_address: str, amount: float) -> str:
         "from": from_address,
         "to": to_address,
         "value": web3_ganache.to_wei(amount, "ether"),
-        "gas": 21000,
+        "gas": web3_ganache.eth.estimate_gas(),
         "gasPrice": web3_ganache.to_wei(1, "gwei"),
         "nonce": web3_ganache.eth.get_transaction_count(from_address),
         "chainId": web3_ganache.eth.chain_id,
