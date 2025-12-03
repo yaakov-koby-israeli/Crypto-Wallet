@@ -2,8 +2,8 @@ from fastapi import Depends, HTTPException, status, APIRouter, Path
 from sqlalchemy.orm import Session
 from app.database.models import Users, Account
 from typing import Annotated
-from app.database.session_local import get_db
-from routers.auth import get_current_user
+from dependencies.database_dependency import get_db
+from dependencies.user_dependency import get_current_user
 
 router = APIRouter(
     prefix='/admin',
@@ -41,10 +41,8 @@ async def delete_user(user: user_dependency, db: db_dependency, user_id: int = P
     if user_account_to_delete is None:
         raise HTTPException(status_code=404, detail="User Account Not Found!")
 
-    # Delete user and associated account in a single transaction
-    db.delete(user_account_to_delete)
-    db.delete(user_to_delete)
-    db.commit()  # Single commit for both operations
+    db.delete(user_to_delete)  # This deletes account too thanks to CASCADE
+    db.commit()
 
     return {"message": f"User {user_id} and associated account deleted successfully"}
 
