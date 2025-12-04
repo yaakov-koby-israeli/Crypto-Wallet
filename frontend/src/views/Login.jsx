@@ -1,13 +1,18 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, Input, Logo } from "../components/ui/Components";
 
 export const Login = ({ onLogin, loading, error }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault();
-    onLogin({ username, password });
+    const ok = await onLogin({ username, password });
+    if (ok) {
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -29,6 +34,12 @@ export const Login = ({ onLogin, loading, error }) => {
           <Button type="submit" loading={loading}>
             Sign In
           </Button>
+          <div className="text-center text-sm text-white/60 mt-4">
+            Don't have an account?{" "}
+            <Link to="/register" className="text-accent hover:text-accent">
+              Sign up
+            </Link>
+          </div>
         </form>
       </div>
     </div>

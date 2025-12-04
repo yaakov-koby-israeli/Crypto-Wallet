@@ -1,4 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, Input, Logo } from "../components/ui/Components";
 
 export const Register = ({ onRegister, loading, error }) => {
@@ -9,14 +10,17 @@ export const Register = ({ onRegister, loading, error }) => {
     last_name: "",
     password: "",
     role: "user",
-    public_key: "",
   });
+  const navigate = useNavigate();
 
   const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
-    onRegister(form);
+    const ok = await onRegister(form);
+    if (ok) {
+      navigate("/login");
+    }
   };
 
   return (
@@ -37,17 +41,17 @@ export const Register = ({ onRegister, loading, error }) => {
             value={form.password}
             onChange={update("password")}
           />
-          <Input
-            label="Public Key"
-            value={form.public_key}
-            onChange={update("public_key")}
-            placeholder="0x..."
-          />
           <div className="md:col-span-2">
             {error && <div className="mb-2 text-sm text-red-400">{error}</div>}
             <Button type="submit" loading={loading}>
               Register
             </Button>
+            <div className="text-center text-sm text-white/60 mt-4">
+              Already have an account?{" "}
+              <Link to="/login" className="text-accent hover:text-accent">
+                Sign in
+              </Link>
+            </div>
           </div>
         </form>
       </div>

@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { API_BASE_URL, ENDPOINTS } from "../config";
 
 const api = axios.create({
@@ -35,6 +35,11 @@ export const walletService = {
       {},
       { params: { public_key: publicKey } }
     );
+    return res.data;
+  },
+
+  getAccount: async () => {
+    const res = await api.get(ENDPOINTS.account);
     return res.data;
   },
 

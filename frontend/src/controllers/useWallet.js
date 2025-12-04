@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { walletService } from "../api/walletService";
 
 export function useWallet() {
@@ -21,6 +21,17 @@ export function useWallet() {
       return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAccount = async () => {
+    setError(null);
+    try {
+      const data = await walletService.getAccount();
+      setBalance(data.balance ?? 0);
+      setAccountId(data.account_id ?? null);
+    } catch (e) {
+      setError(e.response?.data?.detail || "Could not load account");
     }
   };
 
@@ -51,6 +62,7 @@ export function useWallet() {
   };
 
   useEffect(() => {
+    loadAccount();
     loadTransactions();
   }, []);
 
@@ -62,6 +74,7 @@ export function useWallet() {
     error,
     setupAccount,
     transfer,
+    loadAccount,
     loadTransactions,
   };
 }

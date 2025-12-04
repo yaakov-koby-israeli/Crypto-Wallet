@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Login } from "./views/Login";
 import { Register } from "./views/Register";
@@ -25,8 +25,10 @@ export default function App() {
   const handleLogin = async (credentials) => {
     const ok = await auth.login(credentials);
     if (ok) {
+      await wallet.loadAccount();
       await wallet.loadTransactions();
     }
+    return ok;
   };
 
   const handleRegister = async (payload) => auth.register(payload);
@@ -64,6 +66,8 @@ export default function App() {
                 transactions={wallet.transactions}
                 onSetup={handleSetup}
                 onTransfer={handleTransfer}
+                onRefreshAccount={wallet.loadAccount}
+                onRefreshTransactions={wallet.loadTransactions}
                 loading={wallet.loading}
                 error={wallet.error}
               />

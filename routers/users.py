@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status, APIRouter
+﻿from fastapi import Depends, HTTPException, status, APIRouter, WebSocket, WebSocketDisconnect
 from app.database.models import Users, Account
 from typing import Annotated
 from sqlalchemy.orm import Session
@@ -7,6 +7,7 @@ from dependencies.user_dependency import get_current_user
 from app.schemas.transfer_request import TransferRequest
 from app.service.account_service import setup_account_for_user, update_db_after_transfer_eth
 from app.service.web3_service import ensure_account_exists_on_ganache, get_account_balance_from_blockchain, get_transactions_for_address, send_eth
+from app.service.websocket_manager import manager
 
 
 router = APIRouter(
@@ -51,7 +52,7 @@ async def set_up_account(user: user_dependency, db: db_dependency, public_key: s
     }
 
 @router.get("/user-transactions", status_code=status.HTTP_200_OK)
-async def list_transactions(user: user_dependency):
+async def list_transactions(user: user_dependency, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication Failed")
 
@@ -64,7 +65,59 @@ async def list_transactions(user: user_dependency):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    # Build address -> username lookup for nicer display
+    addresses: set[str] = set()
+    for tx in txs:
+        if tx.get("from"):
+            addresses.add(tx["from"].lower())
+        if tx.get("to"):
+            addresses.add(tx["to"].lower())
+
+    users = db.query(Users).filter(Users.public_key.in_(addresses)).all()
+    addr_to_username = {user.public_key.lower(): user.username for user in users}
+
+    for tx in txs:
+        from_addr = (tx.get("from") or "").lower()
+        to_addr_raw = tx.get("to") or ""
+        to_addr = to_addr_raw.lower() if to_addr_raw else ""
+
+        tx["from_username"] = addr_to_username.get(from_addr, tx.get("from"))
+        tx["to_username"] = addr_to_username.get(to_addr, "External/Contract" if to_addr_raw else "External/Contract")
+
     return {"transactions": txs}
+
+@router.get("/account", status_code=status.HTTP_200_OK)
+async def get_account(user: user_dependency, db: db_dependency):
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+
+    db_account = db.query(Account).filter(Account.user_id == user.get("id")).first()
+    if not db_account:
+        return {"balance": 0, "account_id": None}
+
+    public_key = user.get("public_key")
+    if not public_key:
+        raise HTTPException(status_code=400, detail="User does not have a public key set")
+
+    try:
+        chain_balance = get_account_balance_from_blockchain(public_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    db_account.balance = chain_balance
+    db.commit()
+    db.refresh(db_account)
+
+    return {"balance": db_account.balance, "account_id": db_account.account_id}
+
+@router.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: int):
+    await manager.connect(websocket, user_id)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(user_id)
 
 ### transfer Eth endpoints ###
 
@@ -108,6 +161,8 @@ async def transfer_eth(user: user_dependency, db: db_dependency, transfer_reques
 
     # Update user who gets the eth
     update_db_after_transfer_eth(db, to_account_user.public_key , to_account)
+
+    await manager.send_personal_message("update_balance", to_account_user.id)
 
     return {"message": "ETH transferred successfully", "transaction_hash": tx_hash}
 

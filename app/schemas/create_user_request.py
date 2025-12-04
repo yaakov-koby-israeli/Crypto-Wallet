@@ -1,4 +1,6 @@
+from typing import Optional
 from pydantic import BaseModel
+
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -7,4 +9,4 @@ class CreateUserRequest(BaseModel):
     last_name: str
     password: str
     role: str
-    public_key: str
+    public_key: Optional[str] = None
