@@ -73,13 +73,16 @@ async def transfer_eth(user: user_dependency, db: db_dependency, transfer_reques
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
 
-    from_account = db.query(Account).filter(Account.user_id == user.get("id")).first()
-    if not from_account :
-        raise HTTPException(status_code=404, detail='User account not found')
-
     to_account = db.query(Account).filter(Account.account_id == transfer_request.to_account).first()
     if not to_account:
         raise HTTPException(status_code=404, detail='Destination Account not found')
+
+    from_account = db.query(Account).filter(Account.user_id == user.get("id")).first()
+    if not from_account:
+        raise HTTPException(status_code=404, detail='User account not found')
+
+    if from_account.account_id == to_account.account_id:
+        raise HTTPException(status_code=404, detail='You cant send from yourself to yourself (:')
 
     curr_user_balance = get_account_balance_from_blockchain(user.get("public_key"))
 
