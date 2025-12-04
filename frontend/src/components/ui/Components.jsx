@@ -1,5 +1,9 @@
+import { Link } from "react-router-dom";
+
 export const Logo = () => (
-  <div className="text-xl font-semibold tracking-[0.35em] uppercase">NEXUS</div>
+  <Link to="/" className="text-xl font-semibold tracking-[0.35em] uppercase text-white">
+    NEXUS
+  </Link>
 );
 
 export const ThemeToggle = ({ theme, onToggle }) => {

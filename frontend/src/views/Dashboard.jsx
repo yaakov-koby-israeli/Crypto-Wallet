@@ -140,7 +140,7 @@ export const Dashboard = ({
                   <div className="text-xs text-white/40 truncate">{tx.hash}</div>
                 </div>
                 <div className="text-sm font-semibold text-accent">
-                  {tx.value_eth} ETH
+                  {Number(tx.value_eth ?? 0).toFixed(4)} ETH
                 </div>
               </div>
             ))}

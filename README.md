@@ -1,4 +1,4 @@
-﻿# Crypto Wallet
+# Crypto Wallet
 
 Full-stack crypto wallet that pairs a FastAPI backend (JWT auth, SQLAlchemy, Web3.py) with a React + Vite frontend (Tailwind UI). User/account data lives in SQLite while balances and transfers run against a local Ganache chain.
 
@@ -13,15 +13,15 @@ Backend
 - `app/app.py` - FastAPI app, CORS, router registration, DB bootstrap
 - `app/configuration/config.py` - Pydantic settings from `.env`
 - `app/database/db_config.py` / `app/database/models.py` - engine/session/Base and `Users`/`Account` tables
-- `routers/auth.py` - register + token issuing; `routers/users.py` - account setup, transfers, history; `routers/admin.py` - admin-only listings/deletes
-- `app/service/*` - Ganache client (`web3_service.py`), account creation/balance sync, user lookup
+- `routers/auth.py` - register + token issuing; `routers/users.py` - account setup, transfers, history, WebSocket notifications; `routers/admin.py` - admin-only listings/deletes
+- `app/service/*` - Ganache client (`web3_service.py`), account creation/balance sync, user lookup, WebSocket manager
 - `dependencies/*` - shared DB + auth dependencies
 - `app/schemas/*` - request/response models (CreateUserRequest, Token, TransferRequest)
 Frontend
-- `frontend/src/App.jsx` - routing + theme toggle
-- `frontend/src/controllers/useAuth.js` / `useWallet.js` - auth state, wallet calls, transactions
+- `frontend/src/App.jsx` - routing, dark-only theme, home/login/register/dashboard
+- `frontend/src/controllers/useAuth.js` / `useWallet.js` - auth state, wallet calls, transactions, account loader
 - `frontend/src/api/walletService.js` - axios client for backend endpoints
-- Views: `frontend/src/views/Login.jsx`, `Register.jsx`, `Dashboard.jsx`
+- Views: `frontend/src/views/Home.jsx`, `Login.jsx`, `Register.jsx`, `Dashboard.jsx`
 - UI: `frontend/src/components/ui/Components.jsx`, Tailwind theme in `frontend/tailwind.config.js`
 
 ## Prerequisites
@@ -47,7 +47,7 @@ GANACHE_URL=http://127.0.0.1:7545
 CHAIN_ID=1337
 CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 ```
-3) Start the API: `uvicorn app.app:app --reload` (or `python main.py`). Tables are created automatically on startup.
+3) Start the API: `uvicorn main:app --reload` (or `python main.py`). Tables are created automatically on startup.
 
 ## Frontend setup
 1) `cd frontend`
@@ -59,10 +59,16 @@ CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 1) Register: `POST /auth` with JSON `{ username, email, first_name, last_name, password, role }` (role is forced to `user` server-side). Public key is not required at signup; add it later during account setup. Passwords are bcrypt-hashed.
 2) Login: `POST /auth/token` (form fields `username`, `password`) -> `{ access_token, token_type, public_key }`. Send `Authorization: Bearer <token>` on protected routes.
 3) Set up account (auth): `POST /user/set-up-account?public_key=0x...` validates the Ganache address, saves it on the user, creates an `Account` row if missing, and syncs on-chain balance.
-4) Transfer ETH (auth): `POST /user/transfer-eth` with `{ "to_account": int, "amount": float }` submits an on-chain tx and refreshes both accounts' balances; returns the transaction hash.
-5) Transactions (auth): `GET /user/user-transactions` returns on-chain history for the caller's public key.
+4) Transfer ETH (auth): `POST /user/transfer-eth` with `{ "to_account": int, "amount": float }` submits an on-chain tx and refreshes both accounts' balances; returns the transaction hash. A WebSocket notification is sent to the recipient to refresh their balance.
+5) Transactions (auth): `GET /user/user-transactions` returns on-chain history for the caller's public key, enriched with usernames when available.
 6) Delete account (auth): `DELETE /user/delete-account` removes the caller's account.
 7) Admin only (requires `role=admin`): `GET /admin/users`, `GET /admin/accounts`, `DELETE /admin/delete-user/{user_id}`. Promote users to admin directly in the DB if needed.
+
+### Real-time updates (WebSockets)
+- Endpoint: `GET ws://localhost:8000/user/ws/{user_id}`. The `ConnectionManager` keeps one WebSocket per user ID.
+- When a transfer completes, the backend sends `"update_balance"` to the recipient's connected socket.
+- The dashboard opens a socket after login, listens for that message, then calls the account/transaction loaders to refresh balances and history instantly (no page reload).
+- Works in dev with the API at `localhost:8000`; ensure your frontend origin is allowed in CORS.
 
 ### Quick cURL examples
 Register:
@@ -86,9 +92,10 @@ curl -X POST http://localhost:8000/user/transfer-eth \
 ```
 
 ## Frontend behavior
+- Home landing page with CTAs to login/register
 - Login/Register pages issue auth calls and persist the JWT in `localStorage` (`token` key)
-- Dashboard syncs a Ganache public key, shows balance/account id, sends ETH by account id, and lists on-chain transactions
-- Includes a dark/light theme toggle persisted to `localStorage`
+- Dashboard syncs a Ganache public key, shows balance/account id, sends ETH by account id, shows transactions with usernames, and listens via WebSockets to refresh when funds arrive
+- Dark mode only
 
 ## Notes
 - Ganache must be running and the supplied public keys must exist and be funded there

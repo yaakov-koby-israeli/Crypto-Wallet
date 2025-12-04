@@ -69,12 +69,16 @@ async def list_transactions(user: user_dependency, db: db_dependency):
     addresses: set[str] = set()
     for tx in txs:
         if tx.get("from"):
-            addresses.add(tx["from"].lower())
+            addresses.add(tx["from"])
         if tx.get("to"):
-            addresses.add(tx["to"].lower())
+            addresses.add(tx["to"])
 
-    users = db.query(Users).filter(Users.public_key.in_(addresses)).all()
-    addr_to_username = {user.public_key.lower(): user.username for user in users}
+    users = db.query(Users).all()
+    addr_to_username = {
+        user.public_key.lower(): user.username
+        for user in users
+        if user.public_key
+    }
 
     for tx in txs:
         from_addr = (tx.get("from") or "").lower()
@@ -82,7 +86,10 @@ async def list_transactions(user: user_dependency, db: db_dependency):
         to_addr = to_addr_raw.lower() if to_addr_raw else ""
 
         tx["from_username"] = addr_to_username.get(from_addr, tx.get("from"))
-        tx["to_username"] = addr_to_username.get(to_addr, "External/Contract" if to_addr_raw else "External/Contract")
+        tx["to_username"] = addr_to_username.get(
+            to_addr,
+            "External/Contract" if to_addr_raw else "External/Contract",
+        )
 
     return {"transactions": txs}
 
