@@ -76,7 +76,7 @@ async def create_user(db: db_dependency, create_user_request: CreateUserRequest)
         username=create_user_request.username,
         first_name=create_user_request.first_name,
         last_name=create_user_request.last_name,
-        role=create_user_request.role,
+        role='user', # after create admin the default is user
         public_key=create_user_request.public_key,
         hashed_password=bcrypt_context.hash(create_user_request.password)  # Secure Hashing
     )

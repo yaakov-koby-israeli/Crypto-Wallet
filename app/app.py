@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from database import models
-from database.db_config import engine, SessionLocal
+from app.database import models
+from app.database.db_config import engine, SessionLocal
 from contextlib import asynccontextmanager
 from routers import auth, admin, users
 
@@ -10,9 +10,9 @@ models.Base.metadata.create_all(bind=engine)
 # Lifespan Event (Manages DB Connections)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 FastAPI application starting...")
+    print("FastAPI application starting...")
     yield
-    print("🛑 FastAPI application shutting down...")
+    print("FastAPI application shutting down...")
     # Ensure DB session cleanup
     SessionLocal().close()
 
