@@ -32,4 +32,3 @@ def update_db_after_transfer_eth(db: Session, user_public_key: str, user_account
     user_account.balance=get_account_balance_from_blockchain(user_public_key)
     db.commit()
     db.refresh(user_account)
-    return

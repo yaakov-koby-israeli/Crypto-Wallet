@@ -6,8 +6,7 @@ from dependencies.database_dependency import get_db
 from dependencies.user_dependency import get_current_user
 from app.schemas.transfer_request import TransferRequest
 from app.service.account_service import setup_account_for_user, update_db_after_transfer_eth
-from app.service.web3_service import send_eth
-
+from app.service.web3_service import send_eth, get_account_balance_from_blockchain
 
 router = APIRouter(
     prefix='/user',
@@ -20,7 +19,7 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
  #### End Points ####
 
 @router.post("/set-up-account", status_code=status.HTTP_201_CREATED)
-async def set_up_account(user: user_dependency, db: db_dependency):
+async def set_up_account(user: user_dependency, db: db_dependency, public_key: str): 
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
 
@@ -43,30 +42,37 @@ async def set_up_account(user: user_dependency, db: db_dependency):
 
 ### transfer Eth endpoints ###
 
-@router.post("/transfer-eth", status_code=status.HTTP_201_CREATED)
+@router.post("/transfer-eth", status_code=status.HTTP_200_OK)
 async def transfer_eth(user: user_dependency, db: db_dependency, transfer_request: TransferRequest):
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
 
     from_account = db.query(Account).filter(Account.user_id == user.get("id")).first()
+    if not from_account :
+        raise HTTPException(status_code=404, detail='User account not found')
+
     to_account = db.query(Account).filter(Account.account_id == transfer_request.to_account).first()
+    if not to_account:
+        raise HTTPException(status_code=404, detail='Destination Account not found')
 
-    if not from_account or not to_account:
-        raise HTTPException(status_code=404, detail='Account not found')
+    curr_user_balance = get_account_balance_from_blockchain(user.get("public_key"))
 
-    if transfer_request.amount > from_account.balance:
-        raise HTTPException(status_code=400, detail='Insufficient balance')
+    if transfer_request.amount > curr_user_balance:
+        raise HTTPException(status_code=400, detail='Insufficient balance on chain')
 
-    to_account_user = db.query(Users).filter(to_account.user_id == Users.id).first()
+    to_account_user = db.query(Users).filter(Users.id == to_account.user_id).first()
     if not to_account_user:
         raise HTTPException(status_code=404, detail='Destination User Not Found')
 
     # Use web3 service to transfer the money
-    tx_hash = send_eth(
-        from_address=user.get("public_key"),
-        to_address=to_account_user.public_key,
-        amount=transfer_request.amount,
-    )
+    try:
+        tx_hash = send_eth(
+            from_address=user.get("public_key"),
+            to_address=to_account_user.public_key,
+            amount=transfer_request.amount,
+        )
+    except ValueError as e:
+        raise HTTPException (status_code=400 , detail=f"{e}")
 
     # Update user who delivers the eth
     update_db_after_transfer_eth(db,user.get("public_key"),from_account)
