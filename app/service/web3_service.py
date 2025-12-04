@@ -5,6 +5,18 @@ from app.configuration.config import settings
 ganache_url = settings.GANACHE_URL
 web3_ganache = Web3(Web3.HTTPProvider(ganache_url))
 
+def ensure_account_exists_on_ganache(public_key: str) -> None:
+    """
+    Validate that the provided address is a valid Ethereum address
+    and is present in the connected Ganache node's accounts list.
+    """
+    if not web3_ganache.is_address(public_key):
+        raise ValueError("Invalid Ethereum address")
+
+    ganache_accounts = [acct.lower() for acct in web3_ganache.eth.accounts]
+    if public_key.lower() not in ganache_accounts:
+        raise ValueError("Public key not found on Ganache")
+
 # Get the balance of an Ethereum account
 def get_account_balance_from_blockchain(user_public_key) -> float:
 

@@ -6,7 +6,11 @@ from dependencies.database_dependency import get_db
 from dependencies.user_dependency import get_current_user
 from app.schemas.transfer_request import TransferRequest
 from app.service.account_service import setup_account_for_user, update_db_after_transfer_eth
-from app.service.web3_service import send_eth, get_account_balance_from_blockchain
+from app.service.web3_service import (
+    ensure_account_exists_on_ganache,
+    get_account_balance_from_blockchain,
+    send_eth,
+)
 
 router = APIRouter(
     prefix='/user',
@@ -19,16 +23,25 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
  #### End Points ####
 
 @router.post("/set-up-account", status_code=status.HTTP_201_CREATED)
-async def set_up_account(user: user_dependency, db: db_dependency, public_key: str): 
+async def set_up_account(user: user_dependency, db: db_dependency, public_key: str):
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
 
-    # Convert dict user → ORM user object
+    try:
+        ensure_account_exists_on_ganache(public_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Convert dict user to ORM user object
     db_user = db.query(Users).filter(Users.id == user.get("id")).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    #try to create new account
+    db_user.public_key = public_key
+    db.commit()
+    db.refresh(db_user)
+
+    # try to create new account
     try:
         new_account = setup_account_for_user(db, db_user)
     except ValueError:
