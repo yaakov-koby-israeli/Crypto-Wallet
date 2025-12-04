@@ -1,15 +1,8 @@
-import { useEffect } from "react";
-
 export const Logo = () => (
   <div className="text-xl font-semibold tracking-[0.35em] uppercase">NEXUS</div>
 );
 
 export const ThemeToggle = ({ theme, onToggle }) => {
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.body.classList.toggle("light", theme === "light");
-  }, [theme]);
-
   return (
     <button
         onClick={onToggle}

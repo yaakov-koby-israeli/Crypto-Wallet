@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from app.configuration.config import settings
 from app.database import models
 from app.database.db_config import engine, SessionLocal
-from contextlib import asynccontextmanager
 from routers import auth, admin, users
 
 # Ensure database tables are created
@@ -18,6 +20,15 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI App
 app = FastAPI(lifespan=lifespan)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Define Root Route
 @app.get("/")

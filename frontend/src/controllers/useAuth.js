@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { walletService } from "../api/walletService";
 
 const TOKEN_KEY = "token";

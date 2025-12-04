@@ -18,6 +18,7 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.body.classList.toggle("light", theme === "light");
+    document.documentElement.style.colorScheme = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
 
