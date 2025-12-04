@@ -23,6 +23,40 @@ def get_account_balance_from_blockchain(user_public_key) -> float:
     balance_wei = web3_ganache.eth.get_balance(user_public_key)
     return web3_ganache.from_wei(balance_wei, 'ether')
 
+def get_transactions_for_address(address: str, start_block: int | None = None, end_block: int | None = None) -> list[dict]:
+    """
+    Fetch all transactions involving the given address (as sender or recipient)
+    between start_block and end_block (inclusive). Defaults to the full chain.
+    """
+    if not web3_ganache.is_address(address):
+        raise ValueError("Invalid Ethereum address")
+
+    latest_block = web3_ganache.eth.block_number
+    start = 0 if start_block is None else start_block
+    end = latest_block if end_block is None else end_block
+
+    address_lower = address.lower()
+    txs: list[dict] = []
+
+    for block_number in range(start, end + 1):
+        block = web3_ganache.eth.get_block(block_number, full_transactions=True)
+        for tx in block.transactions:
+            tx_from = (tx["from"] or "").lower()
+            tx_to = (tx["to"] or "").lower() if tx["to"] else ""
+            if address_lower in (tx_from, tx_to):
+                txs.append({
+                    "hash": tx["hash"].hex(),
+                    "from": tx["from"],
+                    "to": tx["to"],
+                    "value_eth": float(web3_ganache.from_wei(tx["value"], "ether")),
+                    "block_number": tx["blockNumber"],
+                    "nonce": tx["nonce"],
+                    "gas": tx["gas"],
+                    "gas_price_wei": tx["gasPrice"],
+                })
+
+    return txs
+
 # Sends ETH using Ganache and returns the transaction hash as a hex string
 def send_eth(from_address: str, to_address: str, amount: float) -> str:
     transaction = {

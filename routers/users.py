@@ -6,11 +6,8 @@ from dependencies.database_dependency import get_db
 from dependencies.user_dependency import get_current_user
 from app.schemas.transfer_request import TransferRequest
 from app.service.account_service import setup_account_for_user, update_db_after_transfer_eth
-from app.service.web3_service import (
-    ensure_account_exists_on_ganache,
-    get_account_balance_from_blockchain,
-    send_eth,
-)
+from app.service.web3_service import ensure_account_exists_on_ganache, get_account_balance_from_blockchain, get_transactions_for_address, send_eth
+
 
 router = APIRouter(
     prefix='/user',
@@ -52,6 +49,22 @@ async def set_up_account(user: user_dependency, db: db_dependency, public_key: s
         "account_id": new_account.account_id,
         "balance": new_account.balance,
     }
+
+@router.get("/user-transactions", status_code=status.HTTP_200_OK)
+async def list_transactions(user: user_dependency):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication Failed")
+
+    public_key = user.get("public_key")
+    if not public_key:
+        raise HTTPException(status_code=400, detail="User does not have a public key set")
+
+    try:
+        txs = get_transactions_for_address(public_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {"transactions": txs}
 
 ### transfer Eth endpoints ###
 
