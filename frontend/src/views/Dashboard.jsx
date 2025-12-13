@@ -18,7 +18,7 @@ export const Dashboard = ({
 
   useEffect(() => {
     if (!user?.id) return;
-    const ws = new WebSocket(`ws://localhost:8000/user/ws/${user.id}`);
+    const ws = new WebSocket(`wss://localhost:8000/user/ws/${user.id}`);
 
     ws.onmessage = async (event) => {
       if (event.data === "update_balance") {
