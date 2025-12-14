@@ -34,6 +34,10 @@ export default function App() {
 
   const handleSetup = (pk) => wallet.setupAccount(pk);
   const handleTransfer = (data) => wallet.transfer(data);
+  const handleLogout = () => {
+    auth.logout();
+    wallet.resetWallet();
+  };
 
   return (
     <BrowserRouter>
@@ -58,6 +62,8 @@ export default function App() {
                 balance={wallet.balance}
                 accountId={wallet.accountId}
                 transactions={wallet.transactions}
+                ethUsdRate={wallet.ethUsdRate}
+                onLogout={handleLogout}
                 onSetup={handleSetup}
                 onTransfer={handleTransfer}
                 onRefreshAccount={wallet.loadAccount}
