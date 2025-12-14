@@ -9,3 +9,8 @@ export const ENDPOINTS = {
   transferEth: "/user/transfer-eth",
   transactions: "/user/user-transactions",
 };
+
+// Mock ETH/USD settings (tunable)
+export const MOCK_ETH_USD_RATE = 2000; // base rate
+export const MOCK_ETH_USD_VOLATILITY = 0.01; // +/-1% drift per tick
+export const MOCK_ETH_USD_REFRESH_MS = 5000; // update cadence in ms
