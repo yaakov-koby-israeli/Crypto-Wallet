@@ -61,7 +61,7 @@ async def list_transactions(user: user_dependency, db: db_dependency):
         raise HTTPException(status_code=400, detail="User does not have a public key set")
 
     try:
-        txs = get_transactions_for_address(public_key)
+        txs = get_transactions_for_address(public_key) or []
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -132,7 +132,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
 async def transfer_eth(user: user_dependency, db: db_dependency, transfer_request: TransferRequest):
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
-
+    
     to_account = db.query(Account).filter(Account.account_id == transfer_request.to_account).first()
     if not to_account:
         raise HTTPException(status_code=404, detail='Destination Account not found')
@@ -142,7 +142,7 @@ async def transfer_eth(user: user_dependency, db: db_dependency, transfer_reques
         raise HTTPException(status_code=404, detail='User account not found')
 
     if from_account.account_id == to_account.account_id:
-        raise HTTPException(status_code=404, detail='You cant send from yourself to yourself (:')
+        raise HTTPException(status_code=404, detail='You cant send ETH to yourself (:')
 
     curr_user_balance = get_account_balance_from_blockchain(user.get("public_key"))
 
@@ -152,6 +152,13 @@ async def transfer_eth(user: user_dependency, db: db_dependency, transfer_reques
     to_account_user = db.query(Users).filter(Users.id == to_account.user_id).first()
     if not to_account_user:
         raise HTTPException(status_code=404, detail='Destination User Not Found')
+    
+    # Ensure the provided username matches the destination account owner
+    if to_account_user.username != transfer_request.recipient_username:
+        raise HTTPException(
+            status_code=400,
+            detail='Account ID does not match the provided username',
+        )
 
     # Use web3 service to transfer the money
     try:
