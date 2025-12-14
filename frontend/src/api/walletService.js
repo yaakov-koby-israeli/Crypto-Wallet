@@ -43,10 +43,14 @@ export const walletService = {
     return res.data;
   },
 
-  transferEth: async ({ toAccount, amount }) => {
-    const res = await api.post(ENDPOINTS.transferEth, {
-      to_account: Number(toAccount),
-      amount: Number(amount),
+  transferEth: async ({ recipientUsername, toAccount, amount }) => {
+    const payload = {
+      recipient_username: recipientUsername,
+      to_account: Number.parseInt(toAccount, 10),
+      amount: Number.parseFloat(amount),
+    };
+    const res = await api.post(ENDPOINTS.transferEth, payload, {
+      headers: { "Content-Type": "application/json" },
     });
     return res.data;
   },
