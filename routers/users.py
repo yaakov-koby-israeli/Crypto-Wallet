@@ -1,4 +1,4 @@
-﻿from fastapi import Depends, HTTPException, status, APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import Depends, HTTPException, status, APIRouter, WebSocket, WebSocketDisconnect
 from app.database.models import Users, Account
 from typing import Annotated
 from sqlalchemy.orm import Session
