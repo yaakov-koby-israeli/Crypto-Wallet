@@ -55,6 +55,24 @@ CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 3) Create `.env` with `VITE_API_BASE_URL=http://localhost:8000`
 4) Run `npm run dev` (Vite defaults to http://localhost:5173). Ensure the origin is included in `CORS_ORIGINS`.
 
+## Run everything locally (dev)
+1) Start Ganache on `http://127.0.0.1:7545` (chain id 1337) with funded accounts.
+2) In one terminal (repo root):
+   ```
+   python -m venv .venv
+   .\.venv\Scripts\activate
+   pip install -r requirements.txt  # or the packages listed above
+   uvicorn main:app --reload
+   ```
+3) In another terminal:
+   ```
+   cd frontend
+   npm install
+   echo VITE_API_BASE_URL=http://localhost:8000 > .env
+   npm run dev
+   ```
+4) Open http://localhost:5173 and use the app. Keep both terminals running.
+
 ## Auth and usage flow
 1) Register: `POST /auth` with JSON `{ username, email, first_name, last_name, password, role }` (role is forced to `user` server-side). Public key is not required at signup; add it later during account setup. Passwords are bcrypt-hashed.
 2) Login: `POST /auth/token` (form fields `username`, `password`) -> `{ access_token, token_type, public_key }`. Send `Authorization: Bearer <token>` on protected routes.
