@@ -55,6 +55,8 @@ def get_transactions_for_address(address: str, start_block: int | None = None, e
                     "gas_price_wei": tx["gasPrice"],
                 })
 
+    # Newest first by block number, then nonce within the block
+    txs.sort(key=lambda tx: (tx["block_number"], tx["nonce"]), reverse=True)
     return txs
 
 # Sends ETH using Ganache and returns the transaction hash as a hex string
