@@ -15,20 +15,20 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 @router.get("/users", status_code=status.HTTP_200_OK)
 async def read_all_users(user: user_dependency, db: db_dependency):
-    if user is None or user.get('role') != 'admin':  # Fixed "user_role" to "role"
+    if user is None or user.get('role') != 'admin':  
         raise HTTPException(status_code=403, detail="Unauthorized Access")
     return db.query(Users).all()
 
 @router.get("/accounts", status_code=status.HTTP_200_OK)
 async def read_all_accounts(user: user_dependency, db: db_dependency):
-    if user is None or user.get('role') != 'admin':  # Fixed "user_role" to "role"
+    if user is None or user.get('role') != 'admin':  
         raise HTTPException(status_code=403, detail="Unauthorized Access")
     return db.query(Account).all()
 
 @router.delete("/delete-user/{user_id}", status_code=status.HTTP_200_OK)
 async def delete_user(user: user_dependency, db: db_dependency, user_id: int = Path(gt=0)):
 
-    if user is None or user.get('role') != 'admin':  # Fixed "user_role" to "role"
+    if user is None or user.get('role') != 'admin':  
         raise HTTPException(status_code=403, detail="Unauthorized Access")
 
     # Fetch user and account associated with user_id
