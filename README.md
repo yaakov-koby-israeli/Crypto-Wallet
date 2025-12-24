@@ -5,6 +5,7 @@ Full-stack crypto wallet that pairs a FastAPI backend (JWT auth, SQLAlchemy, Web
 ## Stack
 - FastAPI, Pydantic, SQLAlchemy, OAuth2/JWT (python-jose), passlib[bcrypt]
 - Web3.py against Ganache for balance reads, ETH transfers, and transaction history
+- WebSockets for real-time balance refresh
 - React 18 + Vite, Tailwind CSS, axios; JWT persisted in `localStorage`
 
 ## Project layout
@@ -27,7 +28,7 @@ Frontend
 ## Prerequisites
 - Python 3.11+
 - Node.js 20+
-- Ganache running locally (default RPC http://127.0.0.1:7545, CHAIN_ID=1337) with funded accounts
+- Ganache running locally (default RPC http://127.0.0.1:7545) with funded accounts
 - pip and npm available; SQLite is bundled with Python
 
 ## Backend setup
@@ -56,7 +57,7 @@ CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 4) Run `npm run dev` (Vite defaults to http://localhost:5173). Ensure the origin is included in `CORS_ORIGINS`.
 
 ## Run everything locally (dev)
-1) Start Ganache on `http://127.0.0.1:7545` (chain id 1337) with funded accounts.
+1) Start Ganache on `http://127.0.0.1:7545` with funded accounts.
 2) In one terminal (repo root):
    ```
    python -m venv .venv
@@ -77,7 +78,7 @@ CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 1) Register: `POST /auth` with JSON `{ username, email, first_name, last_name, password, role }` (role is forced to `user` server-side). Public key is not required at signup; add it later during account setup. Passwords are bcrypt-hashed.
 2) Login: `POST /auth/token` (form fields `username`, `password`) -> `{ access_token, token_type, public_key }`. Send `Authorization: Bearer <token>` on protected routes.
 3) Set up account (auth): `POST /user/set-up-account?public_key=0x...` validates the Ganache address, saves it on the user, creates an `Account` row if missing, and syncs on-chain balance.
-4) Transfer ETH (auth): `POST /user/transfer-eth` with `{ "to_account": int, "amount": float }` submits an on-chain tx and refreshes both accounts' balances; returns the transaction hash. A WebSocket notification is sent to the recipient to refresh their balance.
+4) Transfer ETH (auth): `POST /user/transfer-eth` with `{ "recipient_username": str, "to_account": int, "amount": float }` submits an on-chain tx and refreshes both accounts' balances; returns the transaction hash. A WebSocket notification is sent to the recipient to refresh their balance.
 5) Transactions (auth): `GET /user/user-transactions` returns on-chain history for the caller's public key, enriched with usernames when available.
 6) Delete account (auth): `DELETE /user/delete-account` removes the caller's account.
 7) Admin only (requires `role=admin`): `GET /admin/users`, `GET /admin/accounts`, `DELETE /admin/delete-user/{user_id}`. Promote users to admin directly in the DB if needed.
@@ -106,15 +107,18 @@ Transfer (with token):
 curl -X POST http://localhost:8000/user/transfer-eth \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{"to_account":2,"amount":0.1}'
+  -d '{"recipient_username":"bob","to_account":2,"amount":0.1}'
 ```
 
 ## Frontend behavior
 - Home landing page with CTAs to login/register
 - Login/Register pages issue auth calls and persist the JWT in `localStorage` (`token` key)
-- Dashboard syncs a Ganache public key, shows balance/account id, sends ETH by account id, shows transactions with usernames, and listens via WebSockets to refresh when funds arrive
+- Dashboard syncs a Ganache public key, shows balance/account id, sends ETH by account id + username, shows transactions with usernames, and listens via WebSockets to refresh when funds arrive
+- USD totals use a mock ETH/USD rate that drifts over time (not a live price feed)
 - Dark mode only
 
 ## Notes
 - Ganache must be running and the supplied public keys must exist and be funded there
+- If Ganache is down or unreachable, blockchain endpoints return HTTP 503 with a clear error message
+- If you run the backend in WSL/Docker, update `GANACHE_URL` to point at the Windows host (for example `http://host.docker.internal:7545`)
 - Default DB is `cryptowallet.db` in the repo root; adjust `DATABASE_URL` for another DB engine
