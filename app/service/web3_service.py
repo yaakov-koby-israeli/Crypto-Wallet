@@ -1,9 +1,25 @@
+from requests.exceptions import RequestException
 from web3 import Web3
 
 from app.configuration.config import settings
 
 ganache_url = settings.GANACHE_URL
 web3_ganache = Web3(Web3.HTTPProvider(ganache_url))
+
+GANACHE_UNAVAILABLE_MESSAGE = (
+    f"Ganache RPC is unreachable at {ganache_url}. "
+    "Start Ganache and verify GANACHE_URL."
+)
+
+class GanacheUnavailableError(RuntimeError):
+    pass
+
+def _ensure_ganache_available() -> None:
+    try:
+        if not web3_ganache.is_connected():
+            raise GanacheUnavailableError(GANACHE_UNAVAILABLE_MESSAGE)
+    except RequestException as exc:
+        raise GanacheUnavailableError(GANACHE_UNAVAILABLE_MESSAGE) from exc
 
 def ensure_account_exists_on_ganache(public_key: str) -> None:
     """
@@ -13,6 +29,7 @@ def ensure_account_exists_on_ganache(public_key: str) -> None:
     if not web3_ganache.is_address(public_key):
         raise ValueError("Invalid Ethereum address")
 
+    _ensure_ganache_available()
     ganache_accounts = [acct.lower() for acct in web3_ganache.eth.accounts]
     if public_key.lower() not in ganache_accounts:
         raise ValueError("Public key not found on Ganache")
@@ -20,6 +37,7 @@ def ensure_account_exists_on_ganache(public_key: str) -> None:
 # Get the balance of an Ethereum account
 def get_account_balance_from_blockchain(user_public_key) -> float:
 
+    _ensure_ganache_available()
     balance_wei = web3_ganache.eth.get_balance(user_public_key)
     return web3_ganache.from_wei(balance_wei, 'ether')
 
@@ -31,6 +49,7 @@ def get_transactions_for_address(address: str, start_block: int | None = None, e
     if not web3_ganache.is_address(address):
         raise ValueError("Invalid Ethereum address")
 
+    _ensure_ganache_available()
     latest_block = web3_ganache.eth.block_number
     start = 0 if start_block is None else start_block
     end = latest_block if end_block is None else end_block
@@ -61,6 +80,7 @@ def get_transactions_for_address(address: str, start_block: int | None = None, e
 
 # Sends ETH using Ganache and returns the transaction hash as a hex string
 def send_eth(from_address: str, to_address: str, amount: float) -> str:
+    _ensure_ganache_available()
     transaction = {
         "from": from_address,
         "to": to_address,
