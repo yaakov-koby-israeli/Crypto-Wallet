@@ -2,8 +2,8 @@ from fastapi import Depends, HTTPException, status, APIRouter, WebSocket, WebSoc
 from backend.database.models import Users, Account
 from typing import Annotated
 from sqlalchemy.orm import Session
-from dependencies.database_dependency import get_db
-from dependencies.user_dependency import get_current_user
+from backend.dependencies.database_dependency import get_db
+from backend.dependencies.user_dependency import get_current_user
 from backend.schemas.transfer_request import TransferRequest
 from backend.service.account_service import setup_account_for_user, update_db_after_transfer_eth
 from backend.service.web3_service import GanacheUnavailableError, ensure_account_exists_on_ganache, get_account_balance_from_blockchain, get_transactions_for_address, send_eth
@@ -213,4 +213,5 @@ async def delete_account(user: user_dependency, db: db_dependency):
     db.commit()  # Single commit for both operations
 
     return {"message": "Account Deleted successfully", "user_id": user.get("id")}
+
 
