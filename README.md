@@ -11,13 +11,13 @@ Full-stack crypto wallet that pairs a FastAPI backend (JWT auth, SQLAlchemy, Web
 ## Project layout
 Backend
 - `main.py` - local dev entry (Uvicorn)
-- `app/app.py` - FastAPI app, CORS, router registration, DB bootstrap
-- `app/configuration/config.py` - Pydantic settings from `.env`
-- `app/database/db_config.py` / `app/database/models.py` - engine/session/Base and `Users`/`Account` tables
+- `backend/app.py` - FastAPI app, CORS, router registration, DB bootstrap
+- `backend/configuration/config.py` - Pydantic settings from `.env`
+- `backend/database/db_config.py` / `backend/database/models.py` - engine/session/Base and `Users`/`Account` tables
 - `routers/auth.py` - register + token issuing; `routers/users.py` - account setup, transfers, history, WebSocket notifications; `routers/admin.py` - admin-only listings/deletes
-- `app/service/*` - Ganache client (`web3_service.py`), account creation/balance sync, user lookup, WebSocket manager
+- `backend/service/*` - Ganache client (`web3_service.py`), account creation/balance sync, user lookup, WebSocket manager
 - `dependencies/*` - shared DB + auth dependencies
-- `app/schemas/*` - request/response models (CreateUserRequest, Token, TransferRequest)
+- `backend/schemas/*` - request/response models (CreateUserRequest, Token, TransferRequest)
 Frontend
 - `frontend/src/App.jsx` - routing, dark-only theme, home/login/register/dashboard
 - `frontend/src/controllers/useAuth.js` / `useWallet.js` - auth state, wallet calls, transactions, account loader

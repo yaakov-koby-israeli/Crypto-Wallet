@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.configuration.config import settings
-from app.database import models
-from app.database.db_config import engine, SessionLocal
+from backend.configuration.config import settings
+from backend.database import models
+from backend.database.db_config import engine, SessionLocal
 from routers import auth, admin, users
 
 # Ensure database tables are created
@@ -46,4 +46,5 @@ def root():
 app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(users.router)
+
 

@@ -1,7 +1,7 @@
 from requests.exceptions import RequestException
 from web3 import Web3
 
-from app.configuration.config import settings
+from backend.configuration.config import settings
 
 ganache_url = settings.GANACHE_URL
 web3_ganache = Web3(Web3.HTTPProvider(ganache_url))
@@ -98,3 +98,4 @@ def send_eth(from_address: str, to_address: str, amount: float) -> str:
         raise ValueError(f"Transaction failed! Reverted. Hash: {tx_hash.hex()}")
 
     return tx_hash.hex()
+

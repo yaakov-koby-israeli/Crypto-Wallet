@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status, APIRouter, Path
 from sqlalchemy.orm import Session
-from app.database.models import Users, Account
+from backend.database.models import Users, Account
 from typing import Annotated
 from dependencies.database_dependency import get_db
 from dependencies.user_dependency import get_current_user
@@ -45,4 +45,5 @@ async def delete_user(user: user_dependency, db: db_dependency, user_id: int = P
     db.commit()
 
     return {"message": f"User {user_id} and associated account deleted successfully"}
+
 

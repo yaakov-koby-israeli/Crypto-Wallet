@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.database.models import Users
+from backend.database.models import Users
 from dependencies.database_dependency import get_db
 from routers.auth import get_current_user as get_current_user_token
 
@@ -25,3 +25,4 @@ async def get_current_user(
         "role": db_user.role,
         "public_key": db_user.public_key,
     }
+

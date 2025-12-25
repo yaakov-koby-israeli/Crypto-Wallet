@@ -1,5 +1,5 @@
-from app.database.models import Account, Users
-from app.service.web3_service import get_account_balance_from_blockchain
+from backend.database.models import Account, Users
+from backend.service.web3_service import get_account_balance_from_blockchain
 from sqlalchemy.orm import Session
 
 def setup_account_for_user(db: Session, user: Users) -> Account:

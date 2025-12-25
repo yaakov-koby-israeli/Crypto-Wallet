@@ -2,15 +2,15 @@ from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from fastapi import HTTPException, APIRouter, status, Depends
 from sqlalchemy.orm import Session
-from app.database.models import Users
+from backend.database.models import Users
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
-from app.configuration.config import settings
+from backend.configuration.config import settings
 from dependencies.database_dependency import get_db
-from app.schemas.token import Token
-from app.schemas.create_user_request import CreateUserRequest
-from app.service.user_service import get_user_by_username
+from backend.schemas.token import Token
+from backend.schemas.create_user_request import CreateUserRequest
+from backend.service.user_service import get_user_by_username
 
 
 router = APIRouter(
@@ -97,4 +97,5 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     token = create_access_token(user.username, user.id, user.role, user.public_key, timedelta(minutes=20))
 
     return {"access_token": token, "token_type": "bearer", "public_key": user.public_key}
+
 

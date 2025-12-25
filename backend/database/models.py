@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, DateTime
 
-from app.database.db_config import Base
+from backend.database.db_config import Base
 
 
 class Users(Base):
@@ -25,3 +25,4 @@ class Account(Base):
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
     balance = Column(Float, default=0.0, nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
+
