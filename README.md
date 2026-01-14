@@ -10,9 +10,8 @@ Full-stack crypto wallet that pairs a FastAPI backend (JWT auth, SQLAlchemy, Web
 
 ## Project layout
 Backend
-- `main.py` - local dev entry (Uvicorn)
-- `backend/app.py` - FastAPI app, CORS, router registration, DB bootstrap
-- `backend/configuration/config.py` - Pydantic settings from `.env`
+- `backend/main.py` - FastAPI app, CORS, router registration, DB bootstrap
+- `backend/configuration/config.py` - Pydantic settings from `backend/.env`
 - `backend/database/db_config.py` / `backend/database/models.py` - engine/session/Base and `Users`/`Account` tables
 - `backend/routers/auth.py` - register + token issuing; `backend/routers/users.py` - account setup, transfers, history, WebSocket notifications; `backend/routers/admin.py` - admin-only listings/deletes
 - `backend/service/*` - Ganache client (`web3_service.py`), account creation/balance sync, user lookup, WebSocket manager
@@ -36,19 +35,19 @@ Frontend
 ```
 python -m venv .venv
 .\.venv\Scripts\activate
-pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] pydantic-settings web3 python-multipart
+pip install -r requirements.txt
 ```
-2) Add a `.env` in the repo root:
+2) Add a `.env` in `backend/`:
 ```
 DATABASE_URL=sqlite:///./cryptowallet.db
 SECRET_KEY=change-me
 ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+ACCESS_TOKEN_EXPIRE_MINUTES=20
 GANACHE_URL=http://127.0.0.1:7545
 CHAIN_ID=1337
 CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 ```
-3) Start the API: `uvicorn main:app --reload` (or `python main.py`). Tables are created automatically on startup.
+3) Start the API from the backend folder: `cd backend` then `uvicorn main:app --reload` (or `python main.py`). Tables are created automatically on startup.
 
 ## Frontend setup
 1) `cd frontend`
@@ -62,7 +61,8 @@ CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
    ```
    python -m venv .venv
    .\.venv\Scripts\activate
-   pip install -r requirements.txt  # or the packages listed above
+   pip install -r requirements.txt
+   cd backend
    uvicorn main:app --reload
    ```
 3) In another terminal:
@@ -78,10 +78,11 @@ CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 1) Register: `POST /auth` with JSON `{ username, email, first_name, last_name, password, role }` (role is forced to `user` server-side). Public key is not required at signup; add it later during account setup. Passwords are bcrypt-hashed.
 2) Login: `POST /auth/token` (form fields `username`, `password`) -> `{ access_token, token_type, public_key }`. Send `Authorization: Bearer <token>` on protected routes.
 3) Set up account (auth): `POST /user/set-up-account?public_key=0x...` validates the Ganache address, saves it on the user, creates an `Account` row if missing, and syncs on-chain balance.
-4) Transfer ETH (auth): `POST /user/transfer-eth` with `{ "recipient_username": str, "to_account": int, "amount": float }` submits an on-chain tx and refreshes both accounts' balances; returns the transaction hash. A WebSocket notification is sent to the recipient to refresh their balance.
-5) Transactions (auth): `GET /user/user-transactions` returns on-chain history for the caller's public key, enriched with usernames when available.
-6) Delete account (auth): `DELETE /user/delete-account` removes the caller's account.
-7) Admin only (requires `role=admin`): `GET /admin/users`, `GET /admin/accounts`, `DELETE /admin/delete-user/{user_id}`. Promote users to admin directly in the DB if needed.
+4) Account summary (auth): `GET /user/account` syncs the on-chain balance and returns `{ balance, account_id }`.
+5) Transfer ETH (auth): `POST /user/transfer-eth` with `{ "recipient_username": str, "to_account": int, "amount": float }` submits an on-chain tx and refreshes both accounts' balances; returns the transaction hash. A WebSocket notification is sent to the recipient to refresh their balance.
+6) Transactions (auth): `GET /user/user-transactions` returns on-chain history for the caller's public key, enriched with usernames when available.
+7) Delete account (auth): `DELETE /user/delete-account` removes the caller's account.
+8) Admin only (requires `role=admin`): `GET /admin/users`, `GET /admin/accounts`, `DELETE /admin/delete-user/{user_id}`. Promote users to admin directly in the DB if needed.
 
 ### Real-time updates (WebSockets)
 - Endpoint: `GET ws://localhost:8000/user/ws/{user_id}`. The `ConnectionManager` keeps one WebSocket per user ID.
@@ -121,4 +122,5 @@ curl -X POST http://localhost:8000/user/transfer-eth \
 - Ganache must be running and the supplied public keys must exist and be funded there
 - If Ganache is down or unreachable, blockchain endpoints return HTTP 503 with a clear error message
 - If you run the backend in WSL/Docker, update `GANACHE_URL` to point at the Windows host (for example `http://host.docker.internal:7545`)
-- Default DB is `cryptowallet.db` in the repo root; adjust `DATABASE_URL` for another DB engine
+- Default DB is `backend/cryptowallet.db` when you run the API from `backend/`; adjust `DATABASE_URL` for another DB engine/path
+- Access tokens currently expire after 20 minutes (set in `backend/routers/auth.py`); `ACCESS_TOKEN_EXPIRE_MINUTES` is required by settings but not yet wired into token creation
