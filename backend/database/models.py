@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, DateTime
 
-from backend.database.db_config import Base
+from database.db_config import Base
 
 
 class Users(Base):

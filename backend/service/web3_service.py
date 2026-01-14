@@ -1,7 +1,7 @@
 from requests.exceptions import RequestException
 from web3 import Web3
 
-from backend.configuration.config import settings
+from configuration.config import settings
 
 ganache_url = settings.GANACHE_URL
 web3_ganache = Web3(Web3.HTTPProvider(ganache_url))

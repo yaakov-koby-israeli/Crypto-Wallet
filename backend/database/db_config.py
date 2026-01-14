@@ -1,18 +1,21 @@
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.configuration.config import settings
+from configuration.config import settings
 
-SQLALCHEMY_DATABASE_URL=settings.DATABASE_URL
+DATABASE_URL = settings.DATABASE_URL
 
-if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
+        DATABASE_URL,
         connect_args={"check_same_thread": False},
     )
 else:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit = False, autoflush=False, bind=engine)
 
 Base = sqlalchemy.orm.declarative_base()
+
+def create_tables():
+    Base.metadata.create_all(bind=engine)

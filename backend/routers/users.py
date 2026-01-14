@@ -1,13 +1,13 @@
 from fastapi import Depends, HTTPException, status, APIRouter, WebSocket, WebSocketDisconnect
-from backend.database.models import Users, Account
+from database.models import Users, Account
 from typing import Annotated
 from sqlalchemy.orm import Session
-from backend.dependencies.database_dependency import get_db
-from backend.dependencies.user_dependency import get_current_user
-from backend.schemas.transfer_request import TransferRequest
-from backend.service.account_service import setup_account_for_user, update_db_after_transfer_eth
-from backend.service.web3_service import GanacheUnavailableError, ensure_account_exists_on_ganache, get_account_balance_from_blockchain, get_transactions_for_address, send_eth
-from backend.service.websocket_manager import manager
+from dependencies.database_dependency import get_db
+from dependencies.user_dependency import get_current_user
+from schemas.transfer_request import TransferRequest
+from service.account_service import setup_account_for_user, update_db_after_transfer_eth
+from service.web3_service import GanacheUnavailableError, ensure_account_exists_on_ganache, get_account_balance_from_blockchain, get_transactions_for_address, send_eth
+from service.websocket_manager import manager
 
 
 router = APIRouter(

@@ -1,5 +1,5 @@
 from typing import Optional
-from backend.database.models import Users
+from database.models import Users
 from sqlalchemy.orm import Session
 
 def get_user_by_username(db: Session, username: str) -> Optional[Users]:

@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from backend.configuration.config import settings
-from backend.database import models
-from backend.database.db_config import engine, SessionLocal
-from backend.routers import auth, admin, users
+from configuration.config import settings
+from database import models
+from database.db_config import engine, SessionLocal
+from routers import auth, admin, users
 
 # Ensure database tables are created
 models.Base.metadata.create_all(bind=engine)
@@ -47,5 +47,8 @@ app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(users.router)
 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
 

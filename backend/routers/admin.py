@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status, APIRouter, Path
 from sqlalchemy.orm import Session
-from backend.database.models import Users, Account
+from database.models import Users, Account
 from typing import Annotated
-from backend.dependencies.database_dependency import get_db
-from backend.dependencies.user_dependency import get_current_user
+from dependencies.database_dependency import get_db
+from dependencies.user_dependency import get_current_user
 
 router = APIRouter(
     prefix='/admin',

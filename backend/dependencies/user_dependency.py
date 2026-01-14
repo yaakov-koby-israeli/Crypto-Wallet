@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from backend.database.models import Users
-from backend.dependencies.database_dependency import get_db
-from backend.routers.auth import get_current_user as get_current_user_token
+from database.models import Users
+from dependencies.database_dependency import get_db
+from routers.auth import get_current_user as get_current_user_token
 
 async def get_current_user(
     token_user: dict = Depends(get_current_user_token),

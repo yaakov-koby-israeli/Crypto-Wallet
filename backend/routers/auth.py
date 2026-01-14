@@ -2,15 +2,15 @@ from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from fastapi import HTTPException, APIRouter, status, Depends
 from sqlalchemy.orm import Session
-from backend.database.models import Users
+from database.models import Users
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
-from backend.configuration.config import settings
-from backend.dependencies.database_dependency import get_db
-from backend.schemas.token import Token
-from backend.schemas.create_user_request import CreateUserRequest
-from backend.service.user_service import get_user_by_username
+from configuration.config import settings
+from dependencies.database_dependency import get_db
+from schemas.token import Token
+from schemas.create_user_request import CreateUserRequest
+from service.user_service import get_user_by_username
 
 
 router = APIRouter(
