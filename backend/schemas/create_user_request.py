@@ -8,7 +8,6 @@ class CreateUserRequest(BaseModel):
     first_name: str
     last_name: str
     password: str = Field(min_length=6, description="Password must be at least 6 characters long")
-    role: str
     public_key: Optional[str] = None
 
     @field_validator("password")

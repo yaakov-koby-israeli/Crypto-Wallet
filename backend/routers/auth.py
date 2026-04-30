@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import HTTPException, APIRouter, status, Depends
 from sqlalchemy.orm import Session
 from database.models import Users
-from passlib.context import CryptContext
+import bcrypt
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from configuration.config import settings
@@ -23,13 +23,12 @@ SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 
 db_dependency = Annotated [Session,Depends(get_db)]
-bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 
 # Authenticate User
 def authenticate_user(username: str, password: str, db):
     user = get_user_by_username(db, username)
-    if not user or not bcrypt_context.verify(password, user.hashed_password):
+    if not user or not bcrypt.checkpw(password.encode(), user.hashed_password.encode()):
         return False
     return user
 
@@ -78,7 +77,7 @@ async def create_user(db: db_dependency, create_user_request: CreateUserRequest)
         last_name=create_user_request.last_name,
         role='user', # after create admin the default is user
         public_key=create_user_request.public_key,
-        hashed_password=bcrypt_context.hash(create_user_request.password)  # Secure Hashing
+        hashed_password=bcrypt.hashpw(create_user_request.password.encode(), bcrypt.gensalt()).decode()
     )
 
     db.add(create_user_model)
